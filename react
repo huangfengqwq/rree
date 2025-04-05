@@ -1,0 +1,217 @@
+App.js
+import React, { useState } from "react";
+import axios from "axios";
+import { API_URL } from "./config"; // 引入 API 地址
+
+function App() {
+  const [message, setMessage] = useState("");
+  const [chatHistory, setChatHistory] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // 发送消息的函数
+  const sendMessage = async () => {
+    if (!message.trim()) {
+      alert("请输入有效消息！");
+      return;
+    }
+
+    // 添加用户消息到历史记录
+    const userMessage = message.trim();
+    setChatHistory((prevHistory) => [...prevHistory, { user: userMessage, bot: null }]);
+    setMessage("");
+
+    try {
+      setIsLoading(true); // 显示加载状态
+      const response = await axios.post(API_URL, { message: userMessage });
+      const botReply = response.data.reply;
+
+      // 更新机器人回复
+      setChatHistory((prevHistory) =>
+          prevHistory.map((chat, index) =>
+              index === prevHistory.length - 1 ? { ...chat, bot: botReply } : chat
+          )
+      );
+    } catch (error) {
+      console.error("Error sending message:", error);
+      setChatHistory((prevHistory) =>
+          prevHistory.map((chat, index) =>
+              index === prevHistory.length - 1
+                  ? { ...chat, bot: "遇到了一些问题，请稍后再试 qvq" }
+                  : chat
+          )
+      );
+    } finally {
+      setIsLoading(false); // 隐藏加载状态
+    }
+  };
+
+  return (
+      <div style={styles.container}>
+        {/* 作者信息和装扮空间 */}
+        <div style={styles.authorSpace}>
+          <div style={styles.avatarContainer}>
+            <img src="/huangfeng.jpg" alt="作者头像" style={styles.avatar} />
+            <span style={styles.authorName}>Created by 悲伤的小黄风</span>
+          </div>
+          <div style={styles.decoration}>
+            <p style={styles.description}>欢迎来到黄风聊天机器人1.0版本!</p>
+            <div style={styles.decorativeBox}>
+              <span role="img" aria-label="星星">✨</span>
+              <span role="img" aria-label="爱心">❤️</span>
+              <span role="img" aria-label="机器人">🤖</span>
+            </div>
+          </div>
+        </div>
+
+
+
+        {/* 聊天记录 */}
+        <div style={styles.chatBox}>
+          {chatHistory.map((chat, index) => (
+              <div key={index} style={styles.messageContainer}>
+                {/* 用户消息 */}
+                <div style={styles.userMessage}>
+                  <strong>你:</strong> {chat.user}
+                </div>
+                {/* 机器人消息 */}
+                {chat.bot !== null && (
+                    <div style={styles.botMessage}>
+                      <strong>机器人:</strong> {chat.bot}
+                    </div>
+                )}
+                {/* 加载状态 */}
+                {chat.bot === null && isLoading && (
+                    <div style={styles.loading}>
+                      <span>正在加载...</span>
+                    </div>
+                )}
+              </div>
+          ))}
+        </div>
+
+        {/* 输入框和发送按钮 */}
+        <div style={styles.inputContainer}>
+          <input
+              type="text"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="输入消息..."
+              style={styles.input}
+          />
+          <button onClick={sendMessage} style={styles.sendButton}>
+            发送
+          </button>
+        </div>
+      </div>
+  );
+}
+
+// 样式部分
+const styles = {
+  container: {
+    fontFamily: "Arial, sans-serif",
+    maxWidth: "600px",
+    margin: "0 auto",
+    padding: "20px",
+    backgroundColor: "#f9f9f9",
+    borderRadius: "8px",
+    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+  },
+  authorSpace: {
+    textAlign: "center",
+    marginBottom: "20px",
+  },
+  avatarContainer: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+  },
+  avatar: {
+    width: "80px",
+    height: "80px",
+    borderRadius: "50%",
+    border: "2px solid #ccc",
+  },
+  authorName: {
+    marginTop: "10px",
+    fontSize: "18px",
+    fontWeight: "bold",
+    color: "#333",
+  },
+  decoration: {
+    marginTop: "10px",
+  },
+  description: {
+    fontSize: "14px",
+    color: "#666",
+  },
+  decorativeBox: {
+    marginTop: "5px",
+    fontSize: "20px",
+  },
+  title: {
+    textAlign: "center",
+    fontSize: "24px",
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: "20px",
+  },
+  chatBox: {
+    maxHeight: "400px",
+    overflowY: "auto",
+    border: "1px solid #ddd",
+    borderRadius: "8px",
+    padding: "10px",
+    marginBottom: "20px",
+    backgroundColor: "#fff",
+  },
+  messageContainer: {
+    marginBottom: "10px",
+  },
+  userMessage: {
+    backgroundColor: "#e3f2fd",
+    padding: "8px 12px",
+    borderRadius: "12px",
+    maxWidth: "80%",
+    alignSelf: "flex-start",
+    color: "#333",
+  },
+  botMessage: {
+    backgroundColor: "#f0f4c3",
+    padding: "8px 12px",
+    borderRadius: "12px",
+    maxWidth: "80%",
+    alignSelf: "flex-end",
+    color: "#333",
+  },
+  loading: {
+    textAlign: "center",
+    color: "#999",
+    fontStyle: "italic",
+  },
+  inputContainer: {
+    display: "flex",
+    gap: "10px",
+  },
+  input: {
+    flex: 1,
+    padding: "10px",
+    border: "1px solid #ddd",
+    borderRadius: "4px",
+    fontSize: "16px",
+  },
+  sendButton: {
+    padding: "10px 20px",
+    backgroundColor: "#007bff",
+    color: "#fff",
+    border: "none",
+    borderRadius: "4px",
+    cursor: "pointer",
+    fontSize: "16px",
+  },
+};
+
+export default App;
+
+2.// config.js
+export const API_URL = "http://localhost:8080/api/chat";
